@@ -125,11 +125,28 @@ function releaseSetting(tool, key) {
   return tool[key] ?? releaseFamily(tool)?.[key];
 }
 
+function resolveReleaseField(tool, key) {
+  const raw = releaseSetting(tool, key);
+  if (raw === null || raw === undefined) return raw;
+  if (typeof raw !== "string") return raw;
+  const expanded = expandTemplate(raw, tool);
+  if (expanded.match(/\{[A-Za-z]/)) {
+    throw new Error(`${tool.name}: unresolved template variables in ${key}=${expanded}`);
+  }
+  return expanded;
+}
+
 function templateValue(tool, key) {
   if (key === "version") return tool.version;
   if (key === "assetVersion") return tool.assetVersion ?? tool.version;
   if (key === "checksumVersion") return tool.checksumVersion ?? tool.assetVersion ?? tool.version;
   if (key === "releaseVersion") return tool.releaseVersion ?? tool.version;
+  if (key === "name") return tool.name;
+  if (key === "tag" || key === "releaseTag") {
+    const tag = tool.releaseTag ?? `v${tool.version}`;
+    return expandTemplate(tag, tool);
+  }
+  if (key === "asset") return assetName(tool);
   return tool[key];
 }
 
@@ -142,24 +159,24 @@ function expandTemplate(template, tool) {
 }
 
 function assetName(tool) {
-  const assetPattern = releaseSetting(tool, "assetPattern");
-  if (!assetPattern) throw new Error(`${tool.name} asset pattern missing`);
-  return expandTemplate(assetPattern, tool);
+  const resolved = resolveReleaseField(tool, "assetPattern");
+  if (!resolved) throw new Error(`${tool.name} asset pattern missing`);
+  return resolved;
 }
 
 function checksumName(tool) {
-  const checksumAsset = releaseSetting(tool, "checksumAsset");
-  return checksumAsset ? expandTemplate(checksumAsset, tool) : null;
+  const checksumAsset = resolveReleaseField(tool, "checksumAsset");
+  return checksumAsset ?? null;
 }
 
 function checksumUrl(tool) {
-  const urlPattern = releaseSetting(tool, "checksumUrl") ?? releaseSetting(tool, "checksumUrlPattern");
-  return urlPattern ? expandTemplate(urlPattern, tool) : null;
+  const resolved = resolveReleaseField(tool, "checksumUrl")
+    ?? resolveReleaseField(tool, "checksumUrlPattern");
+  return resolved;
 }
 
 function releaseAssetUrl(tool) {
-  const urlPattern = releaseSetting(tool, "assetUrl");
-  return urlPattern ? expandTemplate(urlPattern, tool) : null;
+  return resolveReleaseField(tool, "assetUrl");
 }
 
 function checksumFormat(tool) {
@@ -530,7 +547,7 @@ async function installReleaseTool(tool) {
     const assetNameStr = assetName(tool);
     console.log(`[fetch] ${formatFields({
       tool: tool.name,
-      release_tag: releaseSetting(tool, "releaseTag") ?? `v${tool.version}`,
+      release_tag: resolveReleaseField(tool, "releaseTag") ?? `v${tool.version}`,
       asset: assetNameStr,
       target: installPath(tool),
     })}`);
@@ -609,7 +626,7 @@ async function validateReleaseMetadata(tool) {
     const expected = await expectedSha256Direct(tool);
     console.log(`[fetch] ${formatFields({
       tool: tool.name,
-      release_tag: releaseSetting(tool, "releaseTag") ?? `v${tool.version}`,
+      release_tag: resolveReleaseField(tool, "releaseTag") ?? `v${tool.version}`,
       asset: assetNameStr,
       target: "metadata",
     })}`);
