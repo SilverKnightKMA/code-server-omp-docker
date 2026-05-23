@@ -62,7 +62,7 @@ jobs:
               echo "OK: ${cmd} found at ${result}"
             else
               echo "FAIL: ${cmd} not found"
-              docker run --rm --entrypoint /bin/bash code-server-omp:test -c "which ${cmd} 2>&1 || echo 'not found'" 2>&1 || echo "(docker run failed)"
+              docker run --rm --entrypoint /bin/bash code-server-omp:test -c "which ${cmd} 2>&1 || echo 'not found'" 2>&1 || true
               failures=$((failures + 1))
             fi
           done
@@ -77,7 +77,10 @@ jobs:
           failures=0
           for cmd in code-server node npm omp docker dockerd git python3; do
             echo "=== ${cmd} --version ==="
-            version=$(docker run --rm --entrypoint /bin/bash code-server-omp:test -c "${cmd} --version 2>&1" || echo "VERSION CHECK FAILED")
+            # omp invokes bun internally; use -i so profile.d adds
+            # $HOME/.bun/bin (containing bun) to PATH
+            i_flag=""; [ "${cmd}" = "omp" ] && i_flag="-i"
+            version=$(docker run --rm --entrypoint /bin/bash code-server-omp:test ${i_flag} -c "${cmd} --version 2>&1" || echo "VERSION CHECK FAILED")
             echo "${version}"
             if echo "${version}" | grep -q "VERSION CHECK FAILED"; then
               echo "FAIL: ${cmd} --version failed"
