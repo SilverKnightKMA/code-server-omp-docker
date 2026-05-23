@@ -1,5 +1,8 @@
 name: Baked Tools Monitor
 
+permissions:
+  contents: read
+
 on:
   schedule:
     - cron: '0 10 * * 1'
