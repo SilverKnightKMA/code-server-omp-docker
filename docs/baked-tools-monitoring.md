@@ -167,3 +167,42 @@ GHCR. Ensures that all merged baked-tool updates are published.
    step.
 7. If `intentionally-unpinned`, provide a rationale string in
    `intentionalRationale`.
+
+## Baked Tool Change Gate
+
+Any change that affects a baked tool's version, installation method, or
+definition must pass the following validation before merging to `main`.
+
+### Required checks per change type
+
+| Change touches | Must pass |
+|----------------|-----------|
+| `Dockerfile*`, `scripts/**`, `bootstrap.sh` | `baked-tools-check` + `baked-tools-monitor` |
+| `managed-tools/baked-tools.json` | `baked-tools-check` + `baked-tools-monitor` |
+| `package.json`, `package-lock.json`, `bun.lock` | `baked-tools-check` |
+| `managed-tools/manifest.json`, `managed-tools/policy.json` | `managed-tools-check` |
+| `scripts/managed-*-tools.mjs` (user-mounted tool scripts) | `managed-tools-check` |
+| `.github/workflows/baked-tools-check.yml` | `baked-tools-check` |
+| `.github/workflows/baked-tools-monitor.yml` | `baked-tools-check` + `baked-tools-monitor` |
+
+### What each workflow validates
+
+**`baked-tools-check`** — Builds the Docker image from scratch and validates
+that all baked commands exist, return expected versions, and work inside the
+coder shell (the real runtime terminal user). This is the primary gate for
+image integrity.
+
+**`baked-tools-monitor`** — Reads `managed-tools/baked-tools.json` and
+validates every tool has a correct `monitorType`, Dependabot ecosystem
+mapping is accurate, no unresolved template variables exist, and upstream
+version checks report drift for `baked-tools-monitor`-type tools.
+
+**`managed-tools-check`** — Validates user-mounted tool manifests without
+building a Docker image. Does not replace `baked-tools-check`.
+
+### What is not required here
+
+Image publishing to GHCR and automated version bump PRs are separate
+concerns implemented by `build-image.yml` and Dependabot. This validation
+gate only ensures that if a baked-tool change merges, the image builds
+correctly and all baked tools work.

@@ -17,7 +17,8 @@ on:
       - scripts/managed-tools-output.mjs
       - scripts/managed-tools-status.mjs
       - scripts/validate-managed-tools.mjs
-      - managed-tools/**
+      - managed-tools/manifest.json
+      - managed-tools/policy.json
       - .github/workflows/managed-tools-check.yml
   push:
     branches:
@@ -35,7 +36,8 @@ on:
       - scripts/managed-tools-output.mjs
       - scripts/managed-tools-status.mjs
       - scripts/validate-managed-tools.mjs
-      - managed-tools/**
+      - managed-tools/manifest.json
+      - managed-tools/policy.json
       - .github/workflows/managed-tools-check.yml
   schedule:
     - cron: "0 6 * * 1"

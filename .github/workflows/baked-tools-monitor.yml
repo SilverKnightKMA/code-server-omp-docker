@@ -7,16 +7,16 @@ on:
   pull_request:
     paths:
       - managed-tools/baked-tools.json
-      - Dockerfile.dockerfile
-      - scripts/code-server-entrypoint.sh
+      - Dockerfile*
+      - scripts/**
       - .github/workflows/baked-tools-monitor.yml
   push:
     branches:
       - main
     paths:
       - managed-tools/baked-tools.json
-      - Dockerfile.dockerfile
-      - scripts/code-server-entrypoint.sh
+      - Dockerfile*
+      - scripts/**
       - .github/workflows/baked-tools-monitor.yml
 
 jobs:
