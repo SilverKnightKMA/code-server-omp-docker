@@ -13,22 +13,27 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       DOCKER_USER: "${USER:-coder}"
+      # --- Managed tools ---
       CODE_SERVER_OMP_CONFIG_SOURCE: auto
       CODE_SERVER_OMP_CONFIG_CACHE_DIR: /home/coder/.local/state/code-server-omp/config
       CODE_SERVER_OMP_TMPDIR: /home/coder/.local/state/code-server-omp/tmp
       # --- Optional flags ---
-      # ENABLE_DIND: "true"
-      # CODE_SERVER_OMP_AUTOINSTALL: "true"
-      # UI_PASSWORD: change-me
+      # ENABLE_DIND: "true"                    # Docker-in-Docker (cần privileged)
+      # CODE_SERVER_OMP_AUTOINSTALL: "true"    # Tự cài managed tools khi start
+      # UI_PASSWORD: change-me                 # Mật khẩu code-server
     restart: unless-stopped
     volumes:
-      # Workspaces (persist code)
+      # === Workspace ===
       - ./data/workspaces:/home/coder/workspaces
-      # SSH, Git, GitHub auth (persist identity)
+
+      # === Auth & Identity ===
       - ./data/ssh:/home/coder/.ssh
       - ./data/config/git:/home/coder/.config/git
       - ./data/config/gh:/home/coder/.config/gh
-      # Managed tool mounts (3-tier persistence)
+
+      # === Tier 1: Baked-in (không cần volume — có sẵn trong image)
+
+      # === Tier 2: Managed mounted tools (persist giữa các lần recreate) ===
       - ./data/npm-global:/home/coder/.npm-global
       - ./data/bun:/home/coder/.bun
       - ./data/local-bin:/home/coder/.local/bin
@@ -37,14 +42,23 @@ services:
       - ./data/cargo:/home/coder/.cargo
       - ./data/rustup:/home/coder/.rustup
       - ./data/go:/home/coder/.go
-      # Managed download/extract cache
+
+      # === Tier 3: Custom mounted tools (người dùng cài thêm) ===
+      # Tất cả các volume trên cũng phục vụ tier này
+      # vì custom tools (npm install -g, go install, cargo install)
+      # cũng ghi vào cùng thư mục.
+
+      # === Cache (tránh tải lại) ===
       - ./data/code-server-omp-cache:/home/coder/.local/state/code-server-omp
-      # Entrypoint.d (custom init scripts)
+
+      # === Optional: Entrypoint.d (chạy script khi container start) ===
       # - ./data/entrypoint.d:/home/coder/entrypoint.d
-      # Docker-in-Docker state (requires privileged)
+
+      # === Optional: Docker-in-Docker state (cần privileged) ===
       # - ./data/docker:/var/lib/docker
       # - ./data/containerd:/var/lib/containerd
-    # Docker-in-Docker requires privileged mode
+
+    # Docker-in-Docker yêu cầu privileged mode
     # privileged: true
     # security_opt:
     #   - no-new-privileges:false
