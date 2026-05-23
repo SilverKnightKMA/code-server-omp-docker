@@ -47,7 +47,7 @@ RUN curl -fsSL "https://github.com/coder/code-server/releases/download/v${CODE_S
     -o /tmp/code-server.deb
 
 # ── Stage: Docker-in-Docker ────────────────────────────────────────
-FROM docker:29.5.0-dind@sha256:8e3fae900cbfbdc14e8abca89a9e44363065cb535f34a09283c59cc0dde2de20 AS docker-dind
+FROM docker:29.5.2-dind@sha256:6b9cd914eb9c6b342c040a49a27a5eb3804453bae6ecc90f7ff96133595a95e8 AS docker-dind
 
 # ── Stage: runtime ──────────────────────────────────────────────────
 FROM debian:13-slim@sha256:d2ec0a1766c01dad04a185c2d5558b0adace167a7f1758ce80f0017698431d06 AS runtime
