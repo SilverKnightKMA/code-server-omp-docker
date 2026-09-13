@@ -135,7 +135,7 @@
           "sourceType": "github",
           "repo": "SilverKnightKMA/pi-config",
           "extensionRoot": "extensions",
-          "version": "v1.4.40",
+          "version": "v1.4.44",
           "skillRoot": "skills"
         }
       ]
@@ -303,7 +303,7 @@
           "name": "silverknight-paseo-plugins",
           "sourceType": "paseo-git",
           "repo": "SilverKnightKMA/paseo-plugins",
-          "version": "v1.0.35",
+          "version": "v1.0.36",
           "plugins": [
             "agent-health",
             "om-panel",

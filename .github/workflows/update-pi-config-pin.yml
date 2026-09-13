@@ -9,6 +9,12 @@ on:
     # Hourly at :23 — the pi-config pack tags multiple times per dev day and
     # the weekly managed-tools sweep is too slow to track it.
     - cron: "23 * * * *"
+    # Second slot at :53 — GitHub drops/delays low-priority scheduled runs
+    # under load (observed ~1 run per 5h with one slot); two slots double the
+    # chance at least one fires each hour. Merged PRs re-trigger via
+    # workflow_run, so no double-PR risk: the updater no-ops when the pin is
+    # already current.
+    - cron: "53 * * * *"
   workflow_dispatch:
   # Fallback: GitHub drops cron during peak load (observed misses at 10:23,
   # 11:23, 12:23 today). When the bump PR merges, auto-merge-pr runs, and
